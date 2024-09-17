@@ -5,6 +5,8 @@ const userSchema: Schema<IUser> = new Schema({
     userName: { type: String, required: true },    
     email: { type: String, required: true, unique: true },  
     password: { type: String, required: true },   
+    isBlocked:{type:Boolean,default:false},
+    isGoogle:{type:Boolean,default:false},
     createdAt: { type: Date, default: Date.now }, 
 }, {
     timestamps: true
