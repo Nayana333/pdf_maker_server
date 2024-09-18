@@ -34,51 +34,43 @@ app.use(session({
   saveUninitialized: true,
   store: MongoStore.create({
     mongoUrl: process.env.MONGO_URI,
-    ttl: 24 * 60 * 60, // 24 hours
+    ttl: 24 * 60 * 60, 
     autoRemove: 'native',
   }),
   cookie: {
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000 
   }
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Enable CORS
 app.use(cors({
   origin: process.env.ORIGIN,
   methods: "GET,HEAD,PUT,PATCH,DELETE,POST",
   credentials: true
 }));
 
-// Log incoming requests
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
   next();
 });
 
-// Routes
 app.use('/api/users', userRoutes);
 
-// Error handling middleware
 app.use(errorHandler);
 
-// Root route
 app.get('/', (req: Request, res: Response) => {
   res.send('API is running...');
 });
 
-// Error handler for unhandled errors
 app.use((err: Error, req: Request, res: Response, next: Function) => {
   console.error(err.stack);
   res.status(500).send('Something went wrong!');
 });
 
-// Start the server
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

@@ -6,7 +6,10 @@ import {
     login,
     googleAuth,
     uploadPdf,
-    getPdf
+    getPdf,
+    downloadSelectedPages,
+    deleteFile
+  
 } from '../controller/userController';
 import { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
@@ -35,6 +38,8 @@ router.post('/resendOTP', resendOTP);
 router.post('/login', login);
 router.post('/googleAuth', googleAuth);
 router.get('/get-files/:userId', getPdf);
+router.post('/downloadSelectedPages',downloadSelectedPages)
+router.delete('/delete-file/:id',deleteFile)
 
 // PDF upload route
 router.post('/upload-pdf', upload.single('pdf'), uploadPdf);

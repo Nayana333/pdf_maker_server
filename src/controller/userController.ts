@@ -9,6 +9,8 @@ import generateToken from "../utils/generateToken";
 import path from "path";
 import pdfModel from "../model/pdf/pdfModel";
 import { log } from "console";
+const fs = require('fs');
+const { PDFDocument } = require('pdf-lib');
 
 export const registerUser = asyncHandler(async (req: Request, res: Response) => {
     console.log('reached');
@@ -270,3 +272,66 @@ export const registerUser = asyncHandler(async (req: Request, res: Response) => 
       res.status(500).json({ message: 'Internal server error' });
     }
   };
+ 
+
+  export const  downloadSelectedPages = async (req, res) => {
+    const { pdfFile, selectedPages } = req.body;
+
+    try {
+        const filePath = path.join(__dirname, '../files', pdfFile); 
+
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).send('File not found');
+        }
+
+        const existingPdfBytes = fs.readFileSync(filePath);
+        const pdfDoc = await PDFDocument.load(existingPdfBytes);
+        const newPdfDoc = await PDFDocument.create();
+
+        for (const pageNumber of selectedPages) {
+            if (pageNumber > 0 && pageNumber <= pdfDoc.getPageCount()) {
+                const [page] = await newPdfDoc.copyPages(pdfDoc, [pageNumber - 1]);
+                newPdfDoc.addPage(page);
+            }
+        }
+
+        const pdfBytes = await newPdfDoc.save();
+
+        // Send the PDF as a blob response
+        res.setHeader('Content-Disposition', 'attachment; filename=selected_pages.pdf');
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Length', pdfBytes.length);
+        res.send(Buffer.from(pdfBytes));
+
+    } catch (error) {
+        console.error("Error processing PDF:", error);
+        res.status(500).json({ message: 'Error processing PDF' });
+    }
+};
+
+
+export const deleteFile= async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params; 
+    log
+
+    if (!id) {
+      res.status(400).json({ message: 'PDF ID is required' });
+      return;
+    }
+
+    // Find and delete the PDF by its ID
+    const deletedPdf = await pdfModel.findByIdAndDelete(id);
+
+    if (!deletedPdf) {
+      res.status(404).json({ message: 'PDF not found' });
+      return;
+    }
+
+    res.status(200).json({ message: 'PDF deleted successfully' });
+
+  } catch (error) {
+    console.error('Error deleting PDF:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
